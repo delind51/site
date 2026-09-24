@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js"
+    "check": "node --check server.js",
+    "publish-entry": "node scripts/publish-entry.js"
   }
 }
