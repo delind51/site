@@ -1,15 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-
-const [, , jsonPath] = process.argv;
-
-if (!jsonPath) {
-  console.error('Usage: npm run publish-entry -- content/<section>/<slug>.ru.json');
-  process.exit(1);
-}
-
-const root = process.cwd();
-const entry = JSON.parse(readFileSync(join(root, jsonPath), 'utf8'));
 
 const sectionMeta = {
   places: { ru: 'Места', en: 'Places', code: 'PLACE' },
@@ -17,13 +8,6 @@ const sectionMeta = {
   objects: { ru: 'Объекты', en: 'Objects', code: 'OBJECT' },
   projects: { ru: 'Проекты', en: 'Projects', code: 'PROJECT' },
 };
-
-const section = sectionMeta[entry.section];
-
-if (!section) {
-  console.error(`Unknown section: ${entry.section}`);
-  process.exit(1);
-}
 
 function escapeHtml(value = '') {
   return String(value)
@@ -42,22 +26,22 @@ function paragraphize(text = '') {
     .join('');
 }
 
-function photoPath(photo) {
+function photoPath(entry, photo) {
   return `../../${entry.paths.uploads}${photo.targetName}`;
 }
 
-function renderMedia(photo) {
+function renderMedia(entry, photo) {
   if (!photo) {
     return `<div class="entry-page-media" role="img" aria-label="Место для изображения"><span>PHOTO / 16:10</span></div>`;
   }
 
   return `<figure class="entry-page-media entry-page-photo entry-page-photo-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
-          <img src="${photoPath(photo)}" alt="${escapeHtml(entry.title)}" />
+          <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)}" />
           <figcaption>${escapeHtml(photo.originalName)}</figcaption>
         </figure>`;
 }
 
-function renderGallery() {
+function renderGallery(entry) {
   const gallery = entry.photos.filter((photo) => photo.role !== 'cover');
 
   if (!gallery.length) {
@@ -66,13 +50,14 @@ function renderGallery() {
 
   return `<section class="entry-gallery" aria-label="Галерея">
         ${gallery.map((photo) => `<figure class="entry-gallery-item entry-gallery-item-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
-          <img src="${photoPath(photo)}" alt="${escapeHtml(entry.title)} — ${escapeHtml(photo.originalName)}" />
+          <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)} — ${escapeHtml(photo.originalName)}" />
           <figcaption>${escapeHtml(photo.originalName)}</figcaption>
         </figure>`).join('\n        ')}
       </section>`;
 }
 
-function renderEntryPage() {
+function renderEntryPage(entry) {
+  const section = sectionMeta[entry.section];
   const cover = entry.photos.find((photo) => photo.role === 'cover') ?? entry.photos[0];
   const description = escapeHtml(entry.lead || `${entry.title} — материал раздела ${section.ru}.`);
   const title = escapeHtml(entry.title);
@@ -107,7 +92,7 @@ function renderEntryPage() {
           <p class="entry-page-lead">${escapeHtml(entry.lead)}</p>
         </header>
 
-        ${renderMedia(cover)}
+        ${renderMedia(entry, cover)}
 
         <section class="entry-page-body" aria-label="Материал">
           <aside class="entry-page-meta">
@@ -120,7 +105,7 @@ function renderEntryPage() {
           </div>
         </section>
 
-        ${renderGallery()}
+        ${renderGallery(entry)}
       </article>
     </main>
 
@@ -130,7 +115,7 @@ function renderEntryPage() {
 `;
 }
 
-function updateSectionIndex() {
+function updateSectionIndex(root, entry) {
   if (entry.section !== 'places') {
     return;
   }
@@ -169,10 +154,38 @@ function updateSectionIndex() {
   writeFileSync(indexPath, updated);
 }
 
-const outputPath = join(root, entry.section, entry.slug, 'index.html');
+export function publishEntry(root, entry) {
+  const section = sectionMeta[entry.section];
 
-mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(outputPath, renderEntryPage());
-updateSectionIndex();
+  if (!section) {
+    throw new Error(`Unknown section: ${entry.section}`);
+  }
 
-console.log(`Published entry: ${entry.section}/${entry.slug}/index.html`);
+  const outputPath = join(root, entry.section, entry.slug, 'index.html');
+
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, renderEntryPage(entry));
+  updateSectionIndex(root, entry);
+
+  return {
+    path: `${entry.section}/${entry.slug}/index.html`,
+    url: `/${entry.section}/${entry.slug}/index.html`,
+  };
+}
+
+const isCli = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isCli) {
+  const [, , jsonPath] = process.argv;
+
+  if (!jsonPath) {
+    console.error('Usage: npm run publish-entry -- content/<section>/<slug>.ru.json');
+    process.exit(1);
+  }
+
+  const root = process.cwd();
+  const entry = JSON.parse(readFileSync(join(root, jsonPath), 'utf8'));
+  const result = publishEntry(root, entry);
+
+  console.log(`Published entry: ${result.path}`);
+}

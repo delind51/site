@@ -344,6 +344,29 @@ function initAdminPrototype() {
     };
   }
 
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function createPublishPayload() {
+    const draft = createDraft();
+    const photoPayload = await Promise.all(photos.map(async (photo, index) => ({
+      ...draft.photos[index],
+      dataUrl: await readFileAsDataUrl(photo.file),
+    })));
+
+    return {
+      ...draft,
+      photos: photoPayload,
+    };
+  }
+
   function updateDraftJson() {
     currentDraft = createDraft();
 
@@ -419,10 +442,35 @@ function initAdminPrototype() {
     updatePreview();
   });
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    updateDraftJson();
-    setStatus(`Статус: черновик готов. Скачай JSON и запусти: npm run publish-entry -- ${currentDraft.paths.content}`);
+
+    if (!titleInput.value.trim() || !slugInput.value.trim()) {
+      setStatus('Статус: нужно заполнить название и адрес страницы.');
+      return;
+    }
+
+    try {
+      setStatus('Статус: публикую локально…');
+      const payload = await createPublishPayload();
+      const response = await fetch('/api/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || 'Publish failed');
+      }
+
+      setStatus(`Статус: опубликовано. Открыть: ${result.result.url}`);
+      window.open(result.result.url, '_blank');
+    } catch (error) {
+      setStatus(`Статус: ошибка публикации — ${error.message}`);
+    }
   });
 
   copyJsonButton?.addEventListener('click', async () => {
