@@ -21,8 +21,14 @@ const entryRegistry = {
 
 function getCurrentEntry() {
   const pathParts = window.location.pathname.split('/').filter(Boolean);
-  const language = pathParts[0] === 'en' ? 'en' : 'ru';
-  const offset = language === 'en' ? 1 : 0;
+  const baseIndex = pathParts.findIndex((part) => part === 'en' || entryRegistry[part]);
+
+  if (baseIndex === -1) {
+    return null;
+  }
+
+  const language = pathParts[baseIndex] === 'en' ? 'en' : 'ru';
+  const offset = language === 'en' ? baseIndex + 1 : baseIndex;
   const section = pathParts[offset];
   const slug = pathParts[offset + 1];
 
