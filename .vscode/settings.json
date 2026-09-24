@@ -1,0 +1,10 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "index.html": "README.md"
+  },
+  "files.exclude": {
+    "**/.DS_Store": true
+  }
+}
