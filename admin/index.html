@@ -79,43 +79,16 @@
             <small>В прототипе фото появляются только в preview. На следующем этапе они будут загружаться в хранилище.</small>
           </div>
 
-          <fieldset class="admin-photo-controls">
-            <legend>Настройки фото</legend>
-
-            <div class="admin-field admin-field-split">
-              <label for="admin-photo-fit">Кадр</label>
-              <select id="admin-photo-fit" name="photoFit">
-                <option value="auto">Auto</option>
-                <option value="cover">Cover / crop</option>
-                <option value="contain">Contain / full</option>
-              </select>
+          <section class="admin-photo-manager" aria-labelledby="admin-photo-title">
+            <div class="admin-photo-manager-head">
+              <h2 id="admin-photo-title">Фотографии</h2>
+              <p data-photo-note>Выбери фото — для каждой появятся отдельные настройки кадра.</p>
             </div>
 
-            <div class="admin-field admin-field-split">
-              <label for="admin-photo-focus">Фокус</label>
-              <select id="admin-photo-focus" name="photoFocus">
-                <option value="center">Center</option>
-                <option value="top">Top</option>
-                <option value="bottom">Bottom</option>
-                <option value="left">Left</option>
-                <option value="right">Right</option>
-              </select>
+            <div class="admin-photo-list" data-photo-list>
+              <p class="admin-empty">Фото пока не выбраны.</p>
             </div>
-
-            <div class="admin-field admin-field-split">
-              <label for="admin-photo-size">Размер</label>
-              <select id="admin-photo-size" name="photoSize">
-                <option value="normal">Normal</option>
-                <option value="wide">Wide</option>
-                <option value="tall">Tall</option>
-                <option value="square">Square</option>
-              </select>
-            </div>
-
-            <p class="admin-photo-note" data-photo-note>
-              Auto сам подбирает рамку после выбора фото.
-            </p>
-          </fieldset>
+          </section>
 
           <div class="admin-actions">
             <button class="admin-primary" type="submit">Опубликовать</button>
@@ -164,6 +137,6 @@
       </section>
     </main>
 
-    <script src="../script.js?v=github-cms-draft"></script>
+    <script src="../script.js?v=photo-gallery-controls"></script>
   </body>
 </html>

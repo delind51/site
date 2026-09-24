@@ -112,12 +112,10 @@ function initAdminPrototype() {
   const leadInput = form.elements.lead;
   const bodyInput = form.elements.body;
   const imagesInput = form.elements.images;
-  const photoFitInput = form.elements.photoFit;
-  const photoFocusInput = form.elements.photoFocus;
-  const photoSizeInput = form.elements.photoSize;
   const resetButton = document.querySelector('[data-admin-reset]');
   const status = document.querySelector('[data-admin-status]');
   const photoNote = document.querySelector('[data-photo-note]');
+  const photoList = document.querySelector('[data-photo-list]');
   const draftJsonOutput = document.querySelector('[data-draft-json]');
   const copyJsonButton = document.querySelector('[data-copy-json]');
   const downloadJsonButton = document.querySelector('[data-download-json]');
@@ -135,8 +133,7 @@ function initAdminPrototype() {
     projects: { ru: 'Проекты', en: 'Projects', code: 'PROJECT' },
   };
 
-  let previewImageUrl = '';
-  let previewImageRatio = null;
+  let photos = [];
   let currentDraft = {};
 
   function setStatus(message) {
@@ -145,17 +142,55 @@ function initAdminPrototype() {
     }
   }
 
+  function getCoverPhoto() {
+    return photos.find((photo) => photo.role === 'cover') ?? photos[0] ?? null;
+  }
+
+  function getAutoPhotoSize(photo) {
+    if (!photo?.ratio) {
+      return 'normal';
+    }
+
+    if (photo.ratio > 1.25) {
+      return 'wide';
+    }
+
+    if (photo.ratio < 0.85) {
+      return 'tall';
+    }
+
+    return 'square';
+  }
+
+  function getEffectivePhotoSettings(photo) {
+    const requestedFit = photo?.fit ?? 'auto';
+    const size = photo?.size === 'normal' ? getAutoPhotoSize(photo) : photo?.size ?? 'normal';
+
+    return {
+      fit: requestedFit,
+      renderFit: requestedFit === 'auto' ? 'cover' : requestedFit,
+      focus: photo?.focus ?? 'center',
+      size,
+      ratio: photo?.ratio ? Number(photo.ratio.toFixed(4)) : null,
+    };
+  }
+
   function renderPreviewImage() {
     if (!previewMedia) {
       return;
     }
 
     previewMedia.innerHTML = '';
+    const coverPhoto = getCoverPhoto();
 
-    if (previewImageUrl) {
+    if (coverPhoto) {
+      const settings = getEffectivePhotoSettings(coverPhoto);
       const image = document.createElement('img');
-      image.src = previewImageUrl;
+      image.src = coverPhoto.url;
       image.alt = titleInput.value || 'Preview image';
+      previewMedia.dataset.fit = settings.renderFit;
+      previewMedia.dataset.focus = settings.focus;
+      previewMedia.dataset.size = settings.size;
       previewMedia.append(image);
       return;
     }
@@ -165,50 +200,119 @@ function initAdminPrototype() {
     previewMedia.append(placeholder);
   }
 
-  function getAutoPhotoSize() {
-    if (!previewImageRatio) {
-      return 'normal';
-    }
-
-    if (previewImageRatio > 1.25) {
-      return 'wide';
-    }
-
-    if (previewImageRatio < 0.85) {
-      return 'tall';
-    }
-
-    return 'square';
-  }
-
-  function updatePhotoSettings() {
-    const requestedFit = photoFitInput.value;
-    const size = photoSizeInput.value === 'normal' ? getAutoPhotoSize() : photoSizeInput.value;
-    const fit = requestedFit === 'auto' ? 'cover' : requestedFit;
-    const focus = photoFocusInput.value;
-
-    previewMedia.dataset.fit = fit;
-    previewMedia.dataset.focus = focus;
-    previewMedia.dataset.size = size;
-
+  function updatePhotoNote() {
     if (photoNote) {
-      const readableSize = size === 'wide' ? 'wide 16:9' : size === 'tall' ? 'tall 4:5' : size === 'square' ? 'square 1:1' : 'normal';
-      const readableFit = requestedFit === 'auto' ? 'auto → cover без искажения' : requestedFit === 'cover' ? 'cover → заполнить с обрезкой' : 'contain → показать целиком';
-      photoNote.textContent = `Preview: ${readableFit}, ${readableSize}, focus ${focus}. Оригинал не режется.`;
+      photoNote.textContent = photos.length
+        ? `Выбрано фото: ${photos.length}. Первое cover-фото показывается в preview.`
+        : 'Выбери фото — для каждой появятся отдельные настройки кадра.';
     }
   }
 
-  function getEffectivePhotoSettings() {
-    const requestedFit = photoFitInput.value;
-    const size = photoSizeInput.value === 'normal' ? getAutoPhotoSize() : photoSizeInput.value;
+  function setPhotoValue(id, key, value) {
+    photos = photos.map((photo) => {
+      if (key === 'role' && value === 'cover') {
+        return { ...photo, role: photo.id === id ? 'cover' : 'gallery' };
+      }
 
-    return {
-      fit: requestedFit,
-      renderFit: requestedFit === 'auto' ? 'cover' : requestedFit,
-      focus: photoFocusInput.value,
-      size,
-      ratio: previewImageRatio ? Number(previewImageRatio.toFixed(4)) : null,
-    };
+      return photo.id === id ? { ...photo, [key]: value } : photo;
+    });
+    renderPhotoList();
+    renderPreviewImage();
+    updatePreview();
+  }
+
+  function removePhoto(id) {
+    const photo = photos.find((item) => item.id === id);
+
+    if (photo) {
+      URL.revokeObjectURL(photo.url);
+    }
+
+    photos = photos.filter((item) => item.id !== id);
+
+    if (photos.length && !photos.some((item) => item.role === 'cover')) {
+      photos[0].role = 'cover';
+    }
+
+    renderPhotoList();
+    renderPreviewImage();
+    updatePreview();
+  }
+
+  function createOption(value, label, selectedValue) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    option.selected = value === selectedValue;
+    return option;
+  }
+
+  function createPhotoSelect(photo, key, options) {
+    const field = document.createElement('div');
+    const label = document.createElement('label');
+    const select = document.createElement('select');
+
+    field.className = 'admin-field';
+    label.textContent = key === 'role' ? 'Роль' : key === 'fit' ? 'Кадр' : key === 'focus' ? 'Фокус' : 'Размер';
+    select.append(...options.map(([value, labelText]) => createOption(value, labelText, photo[key])));
+    select.addEventListener('change', () => setPhotoValue(photo.id, key, select.value));
+    field.append(label, select);
+    return field;
+  }
+
+  function renderPhotoList() {
+    if (!photoList) {
+      return;
+    }
+
+    photoList.innerHTML = '';
+
+    if (!photos.length) {
+      const empty = document.createElement('p');
+      empty.className = 'admin-empty';
+      empty.textContent = 'Фото пока не выбраны.';
+      photoList.append(empty);
+      updatePhotoNote();
+      return;
+    }
+
+    for (const photo of photos) {
+      const item = document.createElement('article');
+      const thumb = document.createElement('div');
+      const image = document.createElement('img');
+      const body = document.createElement('div');
+      const meta = document.createElement('p');
+      const grid = document.createElement('div');
+      const remove = document.createElement('button');
+
+      item.className = 'admin-photo-item';
+      thumb.className = 'admin-photo-thumb';
+      body.className = 'admin-photo-item-body';
+      meta.className = 'admin-photo-item-meta';
+      grid.className = 'admin-photo-grid';
+      remove.className = 'admin-photo-remove';
+      remove.type = 'button';
+
+      image.src = photo.url;
+      image.alt = photo.file.name;
+      meta.textContent = `${photo.file.name} / ${photo.ratio ? photo.ratio.toFixed(2) : 'ratio pending'}`;
+      remove.textContent = 'Удалить';
+      remove.addEventListener('click', () => removePhoto(photo.id));
+
+      grid.append(
+        createPhotoSelect(photo, 'role', [['cover', 'Cover'], ['gallery', 'Gallery']]),
+        createPhotoSelect(photo, 'fit', [['auto', 'Auto'], ['cover', 'Cover'], ['contain', 'Contain']]),
+        createPhotoSelect(photo, 'focus', [['center', 'Center'], ['top', 'Top'], ['bottom', 'Bottom'], ['left', 'Left'], ['right', 'Right']]),
+        createPhotoSelect(photo, 'size', [['normal', 'Auto size'], ['wide', 'Wide'], ['tall', 'Tall'], ['square', 'Square']]),
+      );
+
+      thumb.append(image);
+      body.append(meta, grid, remove);
+      item.append(thumb, body);
+      photoList.append(item);
+    }
+
+    updatePhotoNote();
   }
 
   function createDraft() {
@@ -216,8 +320,6 @@ function initAdminPrototype() {
     const language = languageInput.value;
     const slug = slugInput.value.trim() || 'new-entry';
     const title = titleInput.value.trim();
-    const selectedFiles = Array.from(imagesInput.files ?? []);
-
     return {
       schema: 'personal-index.entry.v1',
       status: 'draft',
@@ -232,11 +334,11 @@ function initAdminPrototype() {
         publicUrl: `/${section}/${slug}/`,
         uploads: `content/uploads/${section}/${slug}/`,
       },
-      photos: selectedFiles.map((file, index) => ({
-        originalName: file.name,
-        targetName: `${String(index + 1).padStart(2, '0')}-${file.name}`,
-        role: index === 0 ? 'cover' : 'gallery',
-        ...getEffectivePhotoSettings(),
+      photos: photos.map((photo, index) => ({
+        originalName: photo.file.name,
+        targetName: `${String(index + 1).padStart(2, '0')}-${photo.file.name}`,
+        role: photo.role,
+        ...getEffectivePhotoSettings(photo),
       })),
       updatedAt: new Date().toISOString(),
     };
@@ -263,7 +365,7 @@ function initAdminPrototype() {
     previewTitle.textContent = title;
     previewLead.textContent = lead;
     previewBody.textContent = body;
-    updatePhotoSettings();
+    renderPreviewImage();
     updateDraftJson();
     setStatus(`Статус: черновик не сохранён. Будущий адрес: /${sectionInput.value}/${slug}/`);
   }
@@ -272,26 +374,33 @@ function initAdminPrototype() {
   form.addEventListener('change', updatePreview);
 
   imagesInput.addEventListener('change', () => {
-    if (previewImageUrl) {
-      URL.revokeObjectURL(previewImageUrl);
-      previewImageUrl = '';
-    }
+    for (const file of Array.from(imagesInput.files ?? [])) {
+      const photo = {
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        file,
+        url: URL.createObjectURL(file),
+        role: photos.length === 0 ? 'cover' : 'gallery',
+        fit: 'auto',
+        focus: 'center',
+        size: 'normal',
+        ratio: null,
+      };
 
-    const [file] = imagesInput.files;
-
-    if (file) {
-      previewImageUrl = URL.createObjectURL(file);
-      setStatus(`Статус: выбрано фото “${file.name}”, пока только для preview.`);
-
+      photos.push(photo);
       const probe = new Image();
       probe.onload = () => {
-        previewImageRatio = probe.naturalWidth / probe.naturalHeight;
-        updatePhotoSettings();
+        photo.ratio = probe.naturalWidth / probe.naturalHeight;
+        renderPhotoList();
+        renderPreviewImage();
+        updateDraftJson();
         URL.revokeObjectURL(probe.src);
       };
       probe.src = URL.createObjectURL(file);
     }
 
+    imagesInput.value = '';
+    setStatus(`Статус: выбрано фото: ${photos.length}. Настройки можно менять поштучно.`);
+    renderPhotoList();
     renderPreviewImage();
     updatePreview();
   });
@@ -299,13 +408,13 @@ function initAdminPrototype() {
   resetButton?.addEventListener('click', () => {
     form.reset();
 
-    if (previewImageUrl) {
-      URL.revokeObjectURL(previewImageUrl);
-      previewImageUrl = '';
+    for (const photo of photos) {
+      URL.revokeObjectURL(photo.url);
     }
 
-    previewImageRatio = null;
+    photos = [];
 
+    renderPhotoList();
     renderPreviewImage();
     updatePreview();
   });
@@ -342,6 +451,7 @@ function initAdminPrototype() {
   });
 
   updatePreview();
+  renderPhotoList();
 }
 
 initAdminPrototype();
