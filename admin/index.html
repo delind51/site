@@ -125,6 +125,20 @@
           <p class="admin-status" data-admin-status aria-live="polite">
             Статус: черновик не сохранён.
           </p>
+
+          <section class="admin-draft" aria-labelledby="admin-draft-title">
+            <div class="admin-draft-head">
+              <h2 id="admin-draft-title">Draft JSON</h2>
+              <div class="admin-draft-actions">
+                <button type="button" data-copy-json>Скопировать</button>
+                <button type="button" data-download-json>Скачать</button>
+              </div>
+            </div>
+            <textarea data-draft-json rows="12" readonly spellcheck="false"></textarea>
+            <small>
+              Это будущий файл материала. Позже кнопка “Опубликовать” будет сама отправлять такой JSON и фото в GitHub.
+            </small>
+          </section>
         </form>
 
         <aside class="admin-preview" aria-label="Предпросмотр материала">
@@ -150,6 +164,6 @@
       </section>
     </main>
 
-    <script src="../script.js?v=photo-controls"></script>
+    <script src="../script.js?v=github-cms-draft"></script>
   </body>
 </html>

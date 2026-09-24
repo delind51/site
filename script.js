@@ -118,6 +118,9 @@ function initAdminPrototype() {
   const resetButton = document.querySelector('[data-admin-reset]');
   const status = document.querySelector('[data-admin-status]');
   const photoNote = document.querySelector('[data-photo-note]');
+  const draftJsonOutput = document.querySelector('[data-draft-json]');
+  const copyJsonButton = document.querySelector('[data-copy-json]');
+  const downloadJsonButton = document.querySelector('[data-download-json]');
   const previewSection = document.querySelector('[data-preview-section]');
   const previewLabel = document.querySelector('[data-preview-label]');
   const previewTitle = document.querySelector('[data-preview-title]');
@@ -134,6 +137,7 @@ function initAdminPrototype() {
 
   let previewImageUrl = '';
   let previewImageRatio = null;
+  let currentDraft = {};
 
   function setStatus(message) {
     if (status) {
@@ -194,6 +198,58 @@ function initAdminPrototype() {
     }
   }
 
+  function getEffectivePhotoSettings() {
+    const requestedFit = photoFitInput.value;
+    const size = photoSizeInput.value === 'normal' ? getAutoPhotoSize() : photoSizeInput.value;
+
+    return {
+      fit: requestedFit,
+      renderFit: requestedFit === 'auto' ? 'cover' : requestedFit,
+      focus: photoFocusInput.value,
+      size,
+      ratio: previewImageRatio ? Number(previewImageRatio.toFixed(4)) : null,
+    };
+  }
+
+  function createDraft() {
+    const section = sectionInput.value;
+    const language = languageInput.value;
+    const slug = slugInput.value.trim() || 'new-entry';
+    const title = titleInput.value.trim();
+    const selectedFiles = Array.from(imagesInput.files ?? []);
+
+    return {
+      schema: 'personal-index.entry.v1',
+      status: 'draft',
+      section,
+      language,
+      slug,
+      title,
+      lead: leadInput.value.trim(),
+      body: bodyInput.value.trim(),
+      paths: {
+        content: `content/${section}/${slug}.${language}.json`,
+        publicUrl: `/${section}/${slug}/`,
+        uploads: `content/uploads/${section}/${slug}/`,
+      },
+      photos: selectedFiles.map((file, index) => ({
+        originalName: file.name,
+        targetName: `${String(index + 1).padStart(2, '0')}-${file.name}`,
+        role: index === 0 ? 'cover' : 'gallery',
+        ...getEffectivePhotoSettings(),
+      })),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  function updateDraftJson() {
+    currentDraft = createDraft();
+
+    if (draftJsonOutput) {
+      draftJsonOutput.value = JSON.stringify(currentDraft, null, 2);
+    }
+  }
+
   function updatePreview() {
     const section = sectionLabels[sectionInput.value] ?? sectionLabels.places;
     const language = languageInput.value === 'en' ? 'en' : 'ru';
@@ -208,6 +264,7 @@ function initAdminPrototype() {
     previewLead.textContent = lead;
     previewBody.textContent = body;
     updatePhotoSettings();
+    updateDraftJson();
     setStatus(`Статус: черновик не сохранён. Будущий адрес: /${sectionInput.value}/${slug}/`);
   }
 
@@ -255,7 +312,33 @@ function initAdminPrototype() {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    setStatus('Статус: прототип готов. Следующий этап — подключить настоящее сохранение и вход.');
+    updateDraftJson();
+    setStatus('Статус: JSON черновика готов. Следующий этап — отправлять его и фото в GitHub автоматически.');
+  });
+
+  copyJsonButton?.addEventListener('click', async () => {
+    updateDraftJson();
+
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(currentDraft, null, 2));
+      setStatus('Статус: JSON скопирован.');
+    } catch {
+      draftJsonOutput?.select();
+      setStatus('Статус: выделил JSON, можно скопировать вручную.');
+    }
+  });
+
+  downloadJsonButton?.addEventListener('click', () => {
+    updateDraftJson();
+
+    const blob = new Blob([JSON.stringify(currentDraft, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+
+    link.href = URL.createObjectURL(blob);
+    link.download = `${currentDraft.slug || 'entry'}.${currentDraft.language || 'ru'}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    setStatus('Статус: JSON скачан.');
   });
 
   updatePreview();
