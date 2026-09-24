@@ -445,6 +445,11 @@ function initAdminPrototype() {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+      setStatus('Статус: публикация работает в локальной админке на localhost. GitHub Pages показывает сайт, но не запускает backend.');
+      return;
+    }
+
     if (!titleInput.value.trim() || !slugInput.value.trim()) {
       setStatus('Статус: нужно заполнить название и адрес страницы.');
       return;
