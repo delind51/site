@@ -30,42 +30,29 @@ function photoPath(entry, photo) {
   return `../../${entry.paths.uploads}${photo.targetName}`;
 }
 
-function renderMedia(entry, photo) {
-  if (!photo) {
+function renderMediaSlider(entry) {
+  if (!entry.photos.length) {
     return `<div class="entry-page-media" role="img" aria-label="Место для изображения"><span>PHOTO / 16:10</span></div>`;
   }
 
-  return `<figure class="entry-page-media entry-page-photo entry-page-photo-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
-          <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)}" />
-        </figure>`;
-}
+  const cover = entry.photos.find((photo) => photo.role === 'cover') ?? entry.photos[0];
+  const photos = [cover, ...entry.photos.filter((photo) => photo !== cover)];
+  const total = String(photos.length).padStart(2, '0');
 
-function renderGallery(entry) {
-  const gallery = entry.photos.filter((photo) => photo.role !== 'cover');
-
-  if (!gallery.length) {
-    return '';
-  }
-
-  return `<section class="entry-gallery-slider" aria-label="Галерея">
-        <div class="entry-gallery-head">
-          <p class="section-label">GALLERY / ${String(gallery.length).padStart(2, '0')}</p>
-          <div class="entry-gallery-controls" aria-label="Управление галереей">
-            <button type="button" data-slider-prev aria-label="Предыдущее фото">←</button>
-            <button type="button" data-slider-next aria-label="Следующее фото">→</button>
-          </div>
-        </div>
-        <div class="entry-gallery-track" data-entry-slider>
-          ${gallery.map((photo) => `<figure class="entry-gallery-slide entry-gallery-slide-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
-            <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)}" />
+  return `<section class="entry-media-slider" data-entry-carousel aria-label="Фотографии: ${escapeHtml(entry.title)}">
+        <div class="entry-media-track" data-entry-slider>
+          ${photos.map((photo, index) => `<figure class="entry-media-slide entry-media-slide-${photo.size}${index === 0 ? ' is-active' : ''}" data-entry-slide data-fit="${photo.renderFit}" data-focus="${photo.focus}" aria-hidden="${index === 0 ? 'false' : 'true'}">
+            <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)} — фото ${index + 1}" ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} />
           </figure>`).join('\n          ')}
         </div>
+        ${photos.length > 1 ? `<button class="entry-slider-arrow entry-slider-arrow-prev" type="button" data-slider-prev aria-label="Предыдущее фото">←</button>
+        <button class="entry-slider-arrow entry-slider-arrow-next" type="button" data-slider-next aria-label="Следующее фото">→</button>
+        <p class="entry-slider-count" aria-live="polite"><span data-slider-current>01</span> / ${total}</p>` : ''}
       </section>`;
 }
 
 function renderEntryPage(entry) {
   const section = sectionMeta[entry.section];
-  const cover = entry.photos.find((photo) => photo.role === 'cover') ?? entry.photos[0];
   const description = escapeHtml(entry.lead || `${entry.title} — материал раздела ${section.ru}.`);
   const title = escapeHtml(entry.title);
 
@@ -76,7 +63,7 @@ function renderEntryPage(entry) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="${description}" />
     <title>${title} — VLADIMIR IALAMA</title>
-    <link rel="stylesheet" href="../../styles.css?v=generated-entry" />
+    <link rel="stylesheet" href="../../styles.css?v=unified-photo-slider" />
   </head>
   <body>
     <header class="site-header">
@@ -99,19 +86,17 @@ function renderEntryPage(entry) {
           <p class="entry-page-lead">${escapeHtml(entry.lead)}</p>
         </header>
 
-        ${renderMedia(entry, cover)}
+        ${renderMediaSlider(entry)}
 
         <section class="entry-page-body generated-entry-body" aria-label="Материал">
           <div class="entry-page-copy generated-entry-copy">
             ${paragraphize(entry.body)}
           </div>
         </section>
-
-        ${renderGallery(entry)}
       </article>
     </main>
 
-    <script src="../../script.js?v=photo-gallery-controls"></script>
+    <script src="../../script.js?v=unified-photo-slider"></script>
   </body>
 </html>
 `;

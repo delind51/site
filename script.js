@@ -510,18 +510,59 @@ function initAdminPrototype() {
 initAdminPrototype();
 
 function initEntrySliders() {
-  for (const slider of document.querySelectorAll('[data-entry-slider]')) {
-    const section = slider.closest('.entry-gallery-slider');
-    const previous = section?.querySelector('[data-slider-prev]');
-    const next = section?.querySelector('[data-slider-next]');
+  for (const carousel of document.querySelectorAll('[data-entry-carousel]')) {
+    const slides = [...carousel.querySelectorAll('[data-entry-slide]')];
+    const previous = carousel.querySelector('[data-slider-prev]');
+    const next = carousel.querySelector('[data-slider-next]');
+    const current = carousel.querySelector('[data-slider-current]');
+    let activeIndex = 0;
+    let touchStartX = 0;
 
-    function scroll(direction) {
-      const amount = slider.clientWidth * 0.86 * direction;
-      slider.scrollBy({ left: amount, behavior: 'smooth' });
+    if (slides.length < 2) {
+      continue;
     }
 
-    previous?.addEventListener('click', () => scroll(-1));
-    next?.addEventListener('click', () => scroll(1));
+    function showSlide(index) {
+      activeIndex = (index + slides.length) % slides.length;
+
+      slides.forEach((slide, slideIndex) => {
+        const isActive = slideIndex === activeIndex;
+        slide.classList.toggle('is-active', isActive);
+        slide.setAttribute('aria-hidden', String(!isActive));
+      });
+
+      if (current) {
+        current.textContent = String(activeIndex + 1).padStart(2, '0');
+      }
+    }
+
+    previous?.addEventListener('click', () => showSlide(activeIndex - 1));
+    next?.addEventListener('click', () => showSlide(activeIndex + 1));
+
+    carousel.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        showSlide(activeIndex - 1);
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        showSlide(activeIndex + 1);
+      }
+    });
+
+    carousel.addEventListener('touchstart', (event) => {
+      touchStartX = event.touches[0]?.clientX ?? 0;
+    }, { passive: true });
+
+    carousel.addEventListener('touchend', (event) => {
+      const touchEndX = event.changedTouches[0]?.clientX ?? touchStartX;
+      const distance = touchEndX - touchStartX;
+
+      if (Math.abs(distance) > 48) {
+        showSlide(activeIndex + (distance < 0 ? 1 : -1));
+      }
+    }, { passive: true });
   }
 }
 
