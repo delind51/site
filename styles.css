@@ -11,10 +11,11 @@
   05. Home about block
   06. Section pages: hero + item lists
   07. Entry pages: article template + prev/next pager
-  08. 404 page
-  09. Responsive: tablet
-  10. Responsive: mobile
-  11. Motion preferences
+  08. Admin prototype
+  09. 404 page
+  10. Responsive: tablet
+  11. Responsive: mobile
+  12. Motion preferences
 */
 
 /* 01. Design tokens + base reset */
@@ -953,7 +954,221 @@ a:focus-visible {
   color: var(--blue);
 }
 
-/* 08. 404 page */
+/* 08. Admin prototype */
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  min-height: calc(100svh - 70px);
+  padding: 46px var(--page-gutter) 80px;
+}
+
+.admin-hero {
+  grid-column: 1 / 6;
+  padding-right: 7vw;
+}
+
+.admin-hero h1 {
+  margin: 42px 0 0;
+  font-size: clamp(70px, 8.8vw, 138px);
+  font-weight: 500;
+  line-height: 0.78;
+  letter-spacing: -0.078em;
+}
+
+.admin-hero p:not(.section-label) {
+  max-width: 420px;
+  margin: 38px 0 0;
+  color: var(--secondary);
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.admin-form {
+  display: grid;
+  grid-column: 6 / 10;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 18px 12px;
+}
+
+.admin-field {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 9px;
+}
+
+.admin-field-split {
+  grid-column: span 1;
+}
+
+.admin-field label,
+.admin-preview-bar,
+.admin-field small,
+.admin-status {
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.admin-field label {
+  color: var(--text);
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: color-mix(in srgb, white 42%, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.admin-field input,
+.admin-field select {
+  min-height: 48px;
+  padding: 0 13px;
+}
+
+.admin-field textarea {
+  resize: vertical;
+  padding: 13px;
+}
+
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.admin-field small,
+.admin-status {
+  color: var(--secondary);
+}
+
+.admin-actions {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.admin-actions button {
+  min-height: 54px;
+  border: 1px solid var(--text);
+  border-radius: 0;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-primary {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue) !important;
+}
+
+.admin-secondary {
+  background: transparent;
+  color: var(--text);
+}
+
+.admin-status {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  margin: 0;
+}
+
+.admin-preview {
+  grid-column: 10 / -1;
+  align-self: start;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 32%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--border) 32%, transparent) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.admin-preview-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--secondary);
+}
+
+.admin-preview-card {
+  padding: 12px;
+}
+
+.admin-preview-media {
+  position: relative;
+  display: grid;
+  min-height: 210px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(135deg, transparent 0 48%, var(--border) 48% 49%, transparent 49%),
+    color-mix(in srgb, white 36%, transparent);
+}
+
+.admin-preview-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-preview-media span {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: var(--secondary);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.admin-preview-card .section-label {
+  margin-top: 22px;
+}
+
+.admin-preview-card h2 {
+  margin: 22px 0 0;
+  font-size: clamp(38px, 3.6vw, 68px);
+  font-weight: 500;
+  line-height: 0.86;
+  letter-spacing: -0.064em;
+}
+
+.admin-preview-lead {
+  margin: 24px 0 0;
+  font-size: 22px;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.admin-preview-card p:not(.section-label):not(.admin-preview-lead) {
+  margin: 18px 0 0;
+  color: var(--secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 09. 404 page */
 
 .not-found {
   position: relative;
@@ -1048,7 +1263,7 @@ a:focus-visible {
   color: var(--blue);
 }
 
-/* 09. Responsive: tablet */
+/* 10. Responsive: tablet */
 
 @media (max-width: 900px) {
   .site-header {
@@ -1215,9 +1430,28 @@ a:focus-visible {
     grid-column: 3 / 7;
     margin-top: 34px;
   }
+
+  .admin-shell {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 44px 16px;
+  }
+
+  .admin-hero,
+  .admin-form,
+  .admin-preview {
+    grid-column: 1 / -1;
+  }
+
+  .admin-hero {
+    padding-right: 0;
+  }
+
+  .admin-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-/* 10. Responsive: mobile */
+/* 11. Responsive: mobile */
 
 @media (max-width: 560px) {
   .site-header {
@@ -1518,6 +1752,38 @@ a:focus-visible {
     min-height: 82px;
   }
 
+  .admin-shell {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 34px 12px;
+    padding-top: 22px;
+  }
+
+  .admin-hero,
+  .admin-form,
+  .admin-preview,
+  .admin-field-split {
+    grid-column: 1 / -1;
+  }
+
+  .admin-hero h1 {
+    margin-top: 70px;
+    font-size: 18vw;
+  }
+
+  .admin-hero p:not(.section-label) {
+    margin-top: 30px;
+    font-size: 17px;
+  }
+
+  .admin-form,
+  .admin-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-preview-media {
+    min-height: 190px;
+  }
+
   .about-section {
     padding-top: 78px;
   }
@@ -1552,7 +1818,7 @@ a:focus-visible {
   }
 }
 
-/* 11. Motion preferences */
+/* 12. Motion preferences */
 
 @media (prefers-reduced-motion: reduce) {
   html {

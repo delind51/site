@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Прототип админки VLADIMIR IALAMA Personal Index." />
+    <title>Admin — VLADIMIR IALAMA</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="identity" href="../index.html#top" aria-label="VLADIMIR IALAMA — на главную">
+        <span class="identity-full">VLADIMIR IALAMA</span>
+        <span class="identity-short">VI</span>
+      </a>
+
+      <span class="site-label">ADMIN PROTOTYPE / LOCAL</span>
+
+      <nav class="site-nav" aria-label="Основная навигация">
+        <a href="../index.html#entries">Индекс</a>
+        <a href="../index.html#about">Обо мне</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="admin-shell" aria-labelledby="admin-title">
+        <header class="admin-hero">
+          <p class="section-label">CONTENT SYSTEM / 00</p>
+          <h1 id="admin-title">Новый<br />материал</h1>
+          <p>
+            Это прототип будущей админки. Сейчас он показывает сценарий добавления материала,
+            но пока не сохраняет данные на сервер.
+          </p>
+        </header>
+
+        <form class="admin-form" data-admin-form>
+          <div class="admin-field admin-field-split">
+            <label for="admin-section">Раздел</label>
+            <select id="admin-section" name="section">
+              <option value="places">Места</option>
+              <option value="frequency">Частота</option>
+              <option value="objects">Объекты</option>
+              <option value="projects">Проекты</option>
+            </select>
+          </div>
+
+          <div class="admin-field admin-field-split">
+            <label for="admin-language">Язык</label>
+            <select id="admin-language" name="language">
+              <option value="ru">RU</option>
+              <option value="en">EN</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="admin-title-input">Название</label>
+            <input id="admin-title-input" name="title" type="text" value="Кёльн вечером" autocomplete="off" />
+          </div>
+
+          <div class="admin-field">
+            <label for="admin-slug">Адрес страницы</label>
+            <input id="admin-slug" name="slug" type="text" value="cologne-evening" autocomplete="off" />
+            <small>Потом это станет URL: /places/cologne-evening/</small>
+          </div>
+
+          <div class="admin-field">
+            <label for="admin-lead">Короткое описание</label>
+            <textarea id="admin-lead" name="lead" rows="3">Холодный вечер, отражения в стекле и город, который лучше запоминается деталями.</textarea>
+          </div>
+
+          <div class="admin-field">
+            <label for="admin-body">Текст материала</label>
+            <textarea id="admin-body" name="body" rows="7">Здесь будет личная заметка: где был, что заметил, какие места хочется сохранить в архиве и почему этот фрагмент важен.</textarea>
+          </div>
+
+          <div class="admin-field">
+            <label for="admin-images">Фотографии</label>
+            <input id="admin-images" name="images" type="file" accept="image/*" multiple />
+            <small>В прототипе фото появляются только в preview. На следующем этапе они будут загружаться в хранилище.</small>
+          </div>
+
+          <div class="admin-actions">
+            <button class="admin-primary" type="submit">Опубликовать</button>
+            <button class="admin-secondary" type="button" data-admin-reset>Очистить</button>
+          </div>
+
+          <p class="admin-status" data-admin-status aria-live="polite">
+            Статус: черновик не сохранён.
+          </p>
+        </form>
+
+        <aside class="admin-preview" aria-label="Предпросмотр материала">
+          <div class="admin-preview-bar">
+            <span>LIVE PREVIEW</span>
+            <span data-preview-section>PLACES</span>
+          </div>
+
+          <article class="admin-preview-card">
+            <div class="admin-preview-media" data-preview-media>
+              <span>PHOTO / 16:10</span>
+            </div>
+            <p class="section-label" data-preview-label>PLACE / DRAFT</p>
+            <h2 data-preview-title>Кёльн вечером</h2>
+            <p class="admin-preview-lead" data-preview-lead>
+              Холодный вечер, отражения в стекле и город, который лучше запоминается деталями.
+            </p>
+            <p data-preview-body>
+              Здесь будет личная заметка: где был, что заметил, какие места хочется сохранить в архиве и почему этот фрагмент важен.
+            </p>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <script src="../script.js?v=admin-prototype"></script>
+  </body>
+</html>
