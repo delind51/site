@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 const [, , jsonPath] = process.argv;
 
 if (!jsonPath) {
-  console.error('Usage: npm run publish-entry -- content/places/teriberka.ru.json');
+  console.error('Usage: npm run publish-entry -- content/<section>/<slug>.ru.json');
   process.exit(1);
 }
 
@@ -147,7 +147,8 @@ function updateSectionIndex() {
     return;
   }
 
-  const nextNumber = String((html.match(/class="place-row/g) ?? []).length + 1).padStart(2, '0');
+  const existingLinks = html.match(/class="place-row place-row-link"/g) ?? [];
+  const nextNumber = String(existingLinks.length + 1).padStart(2, '0');
   const row = `
           <a class="place-row place-row-link" href="./${entry.slug}/index.html" aria-label="Открыть материал ${escapeHtml(entry.title)}">
             <span>${nextNumber}</span>
@@ -159,7 +160,7 @@ function updateSectionIndex() {
 
   const updated = html.replace(/\n\s*<article class="place-row place-row-empty">[\s\S]*?<\/article>/, `${row}
           <article class="place-row place-row-empty">
-            <span>${String(Number(nextNumber) + 1).padStart(2, '0')}</span>
+            <span>${String(existingLinks.length + 2).padStart(2, '0')}</span>
             <h3>Следующее место</h3>
             <p>Свободная ячейка для новой поездки или города.</p>
             <small>Пусто</small>

@@ -422,7 +422,7 @@ function initAdminPrototype() {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     updateDraftJson();
-    setStatus('Статус: JSON черновика готов. Следующий этап — отправлять его и фото в GitHub автоматически.');
+    setStatus(`Статус: черновик готов. Скачай JSON и запусти: npm run publish-entry -- ${currentDraft.paths.content}`);
   });
 
   copyJsonButton?.addEventListener('click', async () => {

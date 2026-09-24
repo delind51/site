@@ -50,13 +50,13 @@ HTML-блоки `entry-pager` оставлены как fallback, если JavaS
 
 1. Открыть `/admin/`.
 2. Заполнить материал и скачать `Draft JSON`.
-3. Положить JSON в `content/<section>/<slug>.ru.json`.
+3. Положить JSON в `content/<section>/<slug>.ru.json`, например `content/places/my-trip.ru.json`.
 4. Положить фотографии в папку из поля `paths.uploads`, например:
-   `content/uploads/places/teriberka/`.
+   `content/uploads/places/my-trip/`.
 5. Запустить генерацию:
 
 ```bash
-npm run publish-entry -- content/places/teriberka.ru.json
+npm run publish-entry -- content/places/my-trip.ru.json
 ```
 
 Скрипт создаст страницу материала и добавит её в список раздела.
