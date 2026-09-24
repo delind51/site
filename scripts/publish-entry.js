@@ -37,7 +37,6 @@ function renderMedia(entry, photo) {
 
   return `<figure class="entry-page-media entry-page-photo entry-page-photo-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
           <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)}" />
-          <figcaption>${escapeHtml(photo.originalName)}</figcaption>
         </figure>`;
 }
 
@@ -48,11 +47,19 @@ function renderGallery(entry) {
     return '';
   }
 
-  return `<section class="entry-gallery" aria-label="Галерея">
-        ${gallery.map((photo) => `<figure class="entry-gallery-item entry-gallery-item-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
-          <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)} — ${escapeHtml(photo.originalName)}" />
-          <figcaption>${escapeHtml(photo.originalName)}</figcaption>
-        </figure>`).join('\n        ')}
+  return `<section class="entry-gallery-slider" aria-label="Галерея">
+        <div class="entry-gallery-head">
+          <p class="section-label">GALLERY / ${String(gallery.length).padStart(2, '0')}</p>
+          <div class="entry-gallery-controls" aria-label="Управление галереей">
+            <button type="button" data-slider-prev aria-label="Предыдущее фото">←</button>
+            <button type="button" data-slider-next aria-label="Следующее фото">→</button>
+          </div>
+        </div>
+        <div class="entry-gallery-track" data-entry-slider>
+          ${gallery.map((photo) => `<figure class="entry-gallery-slide entry-gallery-slide-${photo.size}" data-fit="${photo.renderFit}" data-focus="${photo.focus}">
+            <img src="${photoPath(entry, photo)}" alt="${escapeHtml(entry.title)}" />
+          </figure>`).join('\n          ')}
+        </div>
       </section>`;
 }
 
@@ -94,13 +101,8 @@ function renderEntryPage(entry) {
 
         ${renderMedia(entry, cover)}
 
-        <section class="entry-page-body" aria-label="Материал">
-          <aside class="entry-page-meta">
-            <span>Раздел: ${section.ru}</span>
-            <span>Статус: ${escapeHtml(entry.status || 'draft')}</span>
-            <span>Фото: ${entry.photos.length}</span>
-          </aside>
-          <div class="entry-page-copy">
+        <section class="entry-page-body generated-entry-body" aria-label="Материал">
+          <div class="entry-page-copy generated-entry-copy">
             ${paragraphize(entry.body)}
           </div>
         </section>

@@ -508,3 +508,21 @@ function initAdminPrototype() {
 }
 
 initAdminPrototype();
+
+function initEntrySliders() {
+  for (const slider of document.querySelectorAll('[data-entry-slider]')) {
+    const section = slider.closest('.entry-gallery-slider');
+    const previous = section?.querySelector('[data-slider-prev]');
+    const next = section?.querySelector('[data-slider-next]');
+
+    function scroll(direction) {
+      const amount = slider.clientWidth * 0.86 * direction;
+      slider.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+
+    previous?.addEventListener('click', () => scroll(-1));
+    next?.addEventListener('click', () => scroll(1));
+  }
+}
+
+initEntrySliders();
